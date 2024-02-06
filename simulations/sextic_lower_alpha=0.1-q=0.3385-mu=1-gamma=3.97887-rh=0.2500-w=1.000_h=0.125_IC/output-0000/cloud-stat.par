@@ -1,0 +1,438 @@
+#------------------------------------------------------------------------------
+# Active thorns
+#------------------------------------------------------------------------------
+
+# Carpet and other basic infrastructure
+ActiveThorns = "
+  ADMBase
+  ADMMacros
+  AHFinderDirect
+  AEILocalInterp
+  Boundary
+  Carpet
+  CarpetInterp
+  CarpetLib
+  CarpetMask
+  CarpetReduce
+  CarpetRegrid2
+  CarpetSlab
+  CarpetTracker
+  CartGrid3D
+  CoordBase
+  CoordGauge
+  Dissipation
+  GenericFD
+  InitBase
+  LeanBSSNMoL
+  LocalInterp
+  LoopControl
+  MoL
+  Multipole
+  NaNChecker
+  NewRad
+  PunctureTracker
+  ReflectionSymmetry
+  SpaceMask
+  SphericalSurface
+  StaticConformal
+  SymBase
+  Time
+  TmunuBase
+"
+
+# libraries
+ActiveThorns = "
+  Fortran
+  GSL
+  HDF5
+"
+
+# scalar and proca fields
+ActiveThorns = "
+  MagScalarBase
+  MagScalarInit
+  MagScalarEvolve
+"
+
+# physical quantities analysis thorns
+ActiveThorns = "
+  NPScalars_Proca
+  QuasiLocalMeasures
+"
+
+# statistics and utilities
+ActiveThorns = "
+  SystemStatistics
+  TerminationTrigger
+  TimerReport
+"
+
+# I/O
+ActiveThorns = "
+  CarpetIOASCII
+  CarpetIOBasic
+  CarpetIOHDF5
+  CarpetIOScalar
+  IOUtil
+"
+
+
+#------------------------------------------------------------------------------
+# Grid setup
+#------------------------------------------------------------------------------
+
+CartGrid3D::type                     = "coordbase"
+Carpet::domain_from_coordbase        = yes
+CoordBase::domainsize                = "minmax"
+
+# make sure all (xmax - xmin)/dx are integers!
+CoordBase::xmin                      = -16.00
+CoordBase::ymin                      = -16.00
+CoordBase::zmin                      = -16.00
+CoordBase::xmax                      = +16.00
+CoordBase::ymax                      = +16.00
+CoordBase::zmax                      = +16.00
+CoordBase::dx                        = 0.125
+CoordBase::dy                        = 0.125
+CoordBase::dz                        = 0.125
+
+driver::ghost_size                   = 3
+
+CoordBase::boundary_size_x_lower     = 3
+CoordBase::boundary_size_y_lower     = 3
+CoordBase::boundary_size_z_lower     = 3
+CoordBase::boundary_size_x_upper     = 3
+CoordBase::boundary_size_y_upper     = 3
+CoordBase::boundary_size_z_upper     = 3
+
+CoordBase::boundary_shiftout_x_lower = 0
+CoordBase::boundary_shiftout_y_lower = 0
+CoordBase::boundary_shiftout_z_lower = 0
+
+CarpetRegrid2::symmetry_rotating180  = no
+
+ReflectionSymmetry::reflection_x     = no
+ReflectionSymmetry::reflection_y     = no
+ReflectionSymmetry::reflection_z     = no
+ReflectionSymmetry::avoid_origin_x   = no
+ReflectionSymmetry::avoid_origin_y   = no
+ReflectionSymmetry::avoid_origin_z   = no
+
+
+#------------------------------------------------------------------------------
+# Mesh refinement
+#------------------------------------------------------------------------------
+
+Carpet::grid_structure_filename        = "carpet-grid-structure"
+Carpet::grid_coordinates_filename      = "carpet-grid-coordinates"
+
+Time::dtfac                            = 0.4
+
+
+#------------------------------------------------------------------------------
+# Initial Data
+#------------------------------------------------------------------------------
+
+ADMBase::lapse_timelevels  = 3
+ADMBase::shift_timelevels  = 3
+ADMBase::metric_timelevels = 3
+
+InitBase::initial_data_setup_method = "init_some_levels"
+Carpet::init_fill_timelevels        = yes
+Carpet::init_3_timelevels           = no
+
+MagScalarInit::x0 = -1e-3  # offset the singularity
+MagScalarInit::y0 = 0.     # .
+MagScalarInit::z0 = 0.     # .
+
+# charged BH + spherical scalar field
+ADMBase::initial_data    = "MagScalar_StatCloud"
+ADMBase::initial_lapse   = "psi^n"
+ADMBase::initial_shift   = "zero"
+ADMBase::initial_dtlapse = "zero"
+ADMBase::initial_dtshift = "zero"
+
+# input file
+# if you set an env variable in your shell that points $CACTUS_ROOT to the cactus root directory, this becomes easier
+MagScalarInit::StatCloud_infile = "$ENV{CACTUS_ROOT}/repos/magnetoscalar/MagScalarInit/etc/QHairyBH/alpha=0.1_q=0.3385_mu=1_gamma=3.97887/lower/rh=0.2500/w=1.000/output.csv"
+MagScalarInit::alpha_E  = 0.1                      # same as alpha above
+MagScalarBase::q        = 11.99951257063034350481  # q = sqrt(4π)/α_E * q_E, where q_E is the value of q above
+MagScalarBase::mu       = 1.                       # same as mu above
+MagScalarBase::V_lambda = 2500                     # V_λ = 2π/α_E^2 * gamma
+MagScalarInit::r_h      = 0.25                     # same as rh above
+MagScalarInit::omega    = 1.                       # same as omega above
+MagScalarInit::c        = 1.                       # same as c above, if none, default is 1
+
+# other parameters for scalar/proca field that are valid for all input files
+MagScalarBase::pot  = 6   # V = μ² |𝜙|² (1 - 2λ|𝜙|²)²
+MagScalarBase::mu_V = 0.  # mass of proca field
+
+
+#------------------------------------------------------------------------------
+# Evolution
+#------------------------------------------------------------------------------
+
+# metric evolution
+ADMBase::evolution_method         = "LeanBSSNMoL"
+ADMBase::lapse_evolution_method   = "LeanBSSNMoL"
+ADMBase::shift_evolution_method   = "LeanBSSNMoL"
+ADMBase::dtlapse_evolution_method = "LeanBSSNMoL"
+ADMBase::dtshift_evolution_method = "LeanBSSNMoL"
+
+LeanBSSNMoL::conf_fac_floor              = 1.0d-04
+LeanBSSNMoL::derivs_order                = 4
+LeanBSSNMoL::calculate_constraints       = yes
+LeanBSSNMoL::calculate_constraints_every = 512
+
+# scalar and proca field evolution
+MagScalarBase::evolution_method        = "MagScalarEvolve"
+
+MagScalarEvolve::calculate_constraints = "yes"
+MagScalarEvolve::store_rho             = "yes"
+MagScalarEvolve::compute_analysis      = "yes"
+MagScalarEvolve::excise_horizon        = "yes"
+MagScalarEvolve::do_analysis_every     = 512
+
+# change behavior of Tmunu variables
+TmunuBase::stress_energy_storage = yes
+TmunuBase::stress_energy_at_RHS  = yes
+TmunuBase::timelevels            = 1
+TmunuBase::prolongation_type     = "none"
+
+
+#------------------------------------------------------------------------------
+# Integration method
+#------------------------------------------------------------------------------
+
+MoL::ODE_Method                 = "RK4"
+MoL::MoL_Intermediate_Steps     = 4
+MoL::MoL_Num_Scratch_Levels     = 1
+
+Carpet::num_integrator_substeps = 4
+
+
+#------------------------------------------------------------------------------
+# Spherical surfaces
+#------------------------------------------------------------------------------
+
+SphericalSurface::nsurfaces = 6
+SphericalSurface::maxntheta = 66
+SphericalSurface::maxnphi   = 124
+SphericalSurface::verbose   = no
+
+# Horizon 1 (AH of the BH)
+SphericalSurface::ntheta            [0] = 41
+SphericalSurface::nphi              [0] = 80
+SphericalSurface::nghoststheta      [0] = 2
+SphericalSurface::nghostsphi        [0] = 2
+CarpetMask::excluded_surface        [0] = 0
+CarpetMask::excluded_surface_factor [0] = 1.0
+
+CarpetMask::verbose = no
+
+
+#------------------------------------------------------------------------------
+# Masks
+#------------------------------------------------------------------------------
+
+SpaceMask::use_mask                                = yes
+AHFinderDirect::set_mask_for_individual_horizon[1] = yes
+AHFinderDirect::set_new_style_mask                 = yes
+AHFinderDirect::set_old_style_mask                 = no
+AHFinderDirect::mask_radius_multiplier             = 1.0
+AHFinderDirect::mask_radius_offset                 = 0.0
+AHFinderDirect::mask_buffer_thickness              = 0.0
+
+# this next thing should not be needed, i think. but otherwise, AHFinderDirect
+# ends up never setting the masks, see mask.cc:586
+AHFinderDirect::mask_is_noshrink = no
+
+#UAv_Analysis::excise_horizon  = yes
+
+
+#------------------------------------------------------------------------------
+# Puncture tracking
+#------------------------------------------------------------------------------
+
+CarpetTracker::surface[0] = 0
+
+PunctureTracker::track                       [0] = yes
+PunctureTracker::initial_x                   [0] = 0
+PunctureTracker::initial_y                   [0] = 0
+PunctureTracker::initial_z                   [0] = 0
+PunctureTracker::which_surface_to_store_info [0] = 0
+
+PunctureTracker::verbose = no
+
+
+#------------------------------------------------------------------------------
+# Horizons
+#------------------------------------------------------------------------------
+
+#AHFinderDirect::verbose_level                      = "algorithm highlights"
+AHFinderDirect::verbose_level                      = "physics details"
+AHFinderDirect::output_BH_diagnostics              = "true"
+AHFinderDirect::run_at_CCTK_POST_RECOVER_VARIABLES = no
+
+AHFinderDirect::find_every     = 512
+AHFinderDirect::output_h_every = 0
+
+AHFinderDirect::move_origins            = yes
+AHFinderDirect::reshape_while_moving    = yes
+AHFinderDirect::predict_origin_movement = yes
+
+AHFinderDirect::max_Newton_iterations__initial           = 50
+AHFinderDirect::max_Newton_iterations__subsequent        = 50
+AHFinderDirect::max_allowable_Theta_growth_iterations    = 10
+AHFinderDirect::max_allowable_Theta_nonshrink_iterations = 10
+AHFinderDirect::geometry_interpolator_name               = "Lagrange polynomial interpolation"
+AHFinderDirect::geometry_interpolator_pars               = "order=4"
+AHFinderDirect::surface_interpolator_name                = "Lagrange polynomial interpolation"
+AHFinderDirect::surface_interpolator_pars                = "order=4"
+
+AHFinderDirect::N_horizons                               = 6
+
+# Horizon 1 (AH of the BH)
+AHFinderDirect::origin_x                             [1] = +0.0
+AHFinderDirect::initial_guess__coord_sphere__x_center[1] = +0.0
+AHFinderDirect::initial_guess__coord_sphere__radius  [1] = 0.2
+AHFinderDirect::which_surface_to_store_info          [1] = 0
+AHFinderDirect::reset_horizon_after_not_finding      [1] = no
+AHFinderDirect::track_origin_from_grid_scalar        [1] = yes
+AHFinderDirect::track_origin_source_x                [1] = "PunctureTracker::pt_loc_x[0]"
+AHFinderDirect::track_origin_source_y                [1] = "PunctureTracker::pt_loc_y[0]"
+AHFinderDirect::track_origin_source_z                [1] = "PunctureTracker::pt_loc_z[0]"
+#AHFinderDirect::max_allowable_horizon_radius         [1] = 1
+#AHFinderDirect::find_after_individual_time           [1] = 900.0
+
+
+#------------------------------------------------------------------------------
+# Check for NaNs
+#------------------------------------------------------------------------------
+
+Carpet::poison_new_timelevels = no
+CarpetLib::poison_new_memory  = no
+#Carpet::poison_value          = 378423.
+Carpet::check_for_poison      = no
+
+NaNChecker::check_every       = 512
+NanChecker::check_after       = 0
+NaNChecker::report_max        = 10
+#NaNChecker::verbose           = "all"
+NaNChecker::action_if_found   = "terminate"
+NaNChecker::out_NaNmask       = yes
+NaNChecker::check_vars        = "
+  ADMBase::lapse
+  ADMBase::shift
+  LeanBSSNMoL::conf_fac
+"
+
+#------------------------------------------------------------------------------
+# Timers
+#------------------------------------------------------------------------------
+
+Cactus::cctk_timer_output               = "full"
+TimerReport::out_every                  = 0
+TimerReport::n_top_timers               = 40
+TimerReport::output_all_timers_together = yes
+TimerReport::output_all_timers_readable = yes
+TimerReport::output_schedule_timers     = no
+
+
+#------------------------------------------------------------------------------
+# I/O
+#------------------------------------------------------------------------------
+
+IO::out_dir = "."
+IOHDF5::output_symmetry_points = no
+
+# screen output
+IOBasic::outInfo_every      = 1
+IOBasic::outInfo_reductions = "minimum maximum"
+IOBasic::outInfo_vars       = "
+"
+
+# 0D reductions text output
+IOScalar::outScalar_every      = 512
+IOScalar::outScalar_reductions = "norm2"
+IOScalar::outScalar_vars       = "
+"
+
+# output just at one point (0D)
+# the quantities below are global, so (x,y,z) doesn't really matter
+IOASCII::out0D_every   = 512
+IOASCII::out0D_point_x = 0.
+IOASCII::out0D_point_y = 0.
+IOASCII::out0D_point_z = 0.
+IOASCII::out0D_vars    = "
+"
+
+# 1D ASCII output
+IOASCII::out1D_every = 512
+IOASCII::out1D_d     = no
+IOASCII::out1D_x     = yes
+IOASCII::out1D_y     = yes
+IOASCII::out1D_z     = yes
+IOASCII::out1D_vars  = "
+"
+
+# 1D HDF5 output
+IOHDF5::out1D_every = 0
+IOHDF5::out1D_d     = no
+IOHDF5::out1D_x     = yes
+IOHDF5::out1D_y     = yes
+IOHDF5::out1D_z     = yes
+IOHDF5::out1D_vars  = "
+"
+
+# 2D HDF5 output
+IOHDF5::out2D_every = 512
+IOHDF5::out2D_xy    = yes
+IOHDF5::out2D_xz    = no
+IOHDF5::out2D_yz    = no
+IOHDF5::out2D_vars  = "
+"
+
+# 3D HDF5 output
+IOHDF5::out3d_every = 1
+IOHDF5::out3d_vars  = "
+  MagScalarEvolve::rho_e
+  MagScalarEvolve::rho_phi
+  SpaceMask::space_mask
+"
+
+
+#------------------------------------------------------------------------------
+# Checkpoints and recovery
+#-------------------------------------------------------------------------------
+
+CarpetIOHDF5::checkpoint            = no
+IO::checkpoint_dir                  = "../checkpoints"
+IO::checkpoint_ID                   = no
+#IO::checkpoint_every_walltime_hours = 24
+IO::checkpoint_on_terminate         = no
+IO::out_proc_every                  = 2
+IO::checkpoint_keep                 = 1
+
+IO::recover     = "autoprobe"
+IO::recover_dir = "../checkpoints"
+
+IO::abort_on_io_errors                      = yes
+CarpetIOHDF5::open_one_input_file_at_a_time = yes
+CarpetIOHDF5::compression_level             = 9
+
+
+#------------------------------------------------------------------------------
+# Termination
+#-------------------------------------------------------------------------------
+
+TerminationTrigger::max_walltime                 = 12  # hours
+TerminationTrigger::on_remaining_walltime        = 30  # minutes
+TerminationTrigger::output_remtime_every_minutes = 0
+TerminationTrigger::termination_from_file        = yes
+TerminationTrigger::termination_file             = "terminate.txt"
+TerminationTrigger::create_termination_file      = yes
+
+# termination condition
+Cactus::terminate       = "time"
+Cactus::cctk_final_time = 0.

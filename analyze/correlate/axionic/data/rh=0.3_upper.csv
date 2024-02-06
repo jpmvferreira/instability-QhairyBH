@@ -1,0 +1,16 @@
+# list of properties of static solutions with rh = 0.3, upper branch
+# omega: frequency of the scalar field
+# M: total mass of the system
+# Qe: total charge of the system
+# AH: area of the horizon
+# TH: temperature of the horizon
+# pM: mass in Maxwell field divided by total mass
+# pS: mass in scalar field divided by total mass
+# QH/Qe: ratio of horizon charge to total charge
+# tau_i_X: time it takes for the BH to move a radius that corresponds to X% of the initial distribution of charge in the scalar field
+# delta_tau_X: time it takes for the BH to move between a radius corresponding to X% and (1-X)% of the initial distribution of charge in the scalar field
+omega,M,Qe,AH,TH,pM,pS,QH/Qe,tau_i_1,delta_tau_1,tau_i_5,delta_tau_5,tau_i_10,delta_tau_10
+0.75,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2556.6985634850844,201.24602661578092,2624.2042987496425,118.47312034598144,2646.1001159290786,89.26659149526995
+0.8,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1774.6740334423573,260.9591265577717,1886.2347698728565,132.06192175988213,1914.2128648964451,96.03573718161738
+0.85,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2898.024648198513,80.89954441743203,2919.442267407558,53.140163813442996,2929.718306946609,39.84934299679571
+0.9,0.0,0.0,0.0,0.0,0.0,0.0,0.0,2859.0895365686383,132.14071878654568,2893.719623983325,87.63993130954395,2910.44617615248,66.12190920698367
